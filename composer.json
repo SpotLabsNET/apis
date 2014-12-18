@@ -1,0 +1,8 @@
+{
+  "name": "openclerk/apis",
+  "autoload": {
+    "psr-4": {
+      "Apis\\": "src"
+    }
+  }
+}
