@@ -75,5 +75,7 @@ foreach (DiscoveredComponents\Apis::getAllInstances() as $uri => $handler) {
 ## TODO
 
 1. API caching support
+1. At `component-discovery` time check that all `getEndpoints()` match, _or_ define extensions so that additional properties can be serialized at compile time (e.g. `code`, `endpoint` -> `getInstanceForEndpoint($endpoint)` and `getAllEndpoints()`...)
+1. A way to define APIs lazily without instantiating all Apis at every request time
 1. Tests
 1. Publish on Packagist
