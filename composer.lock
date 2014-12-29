@@ -4,8 +4,32 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "583727052446ce1bcbabf74ce68dffa6",
-    "packages": [],
+    "hash": "e16237b60e7bdca588f4885ca62d62b3",
+    "packages": [
+        {
+            "name": "openclerk/config",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/openclerk/config.git",
+                "reference": "c86c7dc7567efbf406fd9ceb4252c80560e60bec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/openclerk/config/zipball/c86c7dc7567efbf406fd9ceb4252c80560e60bec",
+                "reference": "c86c7dc7567efbf406fd9ceb4252c80560e60bec",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Openclerk\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "time": "2014-12-08 02:13:51"
+        }
+    ],
     "packages-dev": [
         {
             "name": "doctrine/instantiator",
@@ -896,6 +920,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "openclerk/config": 20,
         "soundasleep/component-tests": 20
     },
     "prefer-stable": false,

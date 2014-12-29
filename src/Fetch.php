@@ -2,22 +2,32 @@
 
 namespace Apis;
 
+use \Openclerk\Config;
+
 class Fetch {
 
   /**
    * Wraps {@link #file_get_contents()} with timeout information etc.
-   * May throw a {@link ExternalAPIException} if something unexpected occured.
+   * Actually uses {@code curl} to do the fetch.
+   * Optionally uses the user agent defined in Config::get('fetch_user_agent').
+   *
+   * TODO currently sets CURLOPT_SSL_VERIFYPEER to FALSE globally; this should be an option
+   *
+   * @param $options additional CURL options to pass
+   * @throws a {@link FetchException} if something unexpected occured
    */
   static function get($url, $options = array()) {
     // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
     // this also means we don't have to enable OpenSSL on windows for file_get_contents('https://...'), which is just a bit of a mess
     $ch = self::initCurl();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; Openclerk PHP client; '.php_uname('s').'; PHP/'.phpversion().')');
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; ' . Config::get('fetch_user_agent', 'openclerk/api PHP fetch') . ' '.php_uname('s').'; PHP/'.phpversion().')');
     curl_setopt($ch, CURLOPT_URL, $url);
     // curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
     // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
+
+    // TODO should this actually be set to true? or a fetch option?
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
     foreach ($options as $key => $value) {
       curl_setopt($ch, $key, $value);
@@ -26,7 +36,7 @@ class Fetch {
     // run the query
     $res = curl_exec($ch);
 
-    if ($res === false) throw new ExternalAPIException('Could not get reply: ' . curl_error($ch));
+    if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
     self::checkResponse($res);
 
     return $res;
@@ -35,18 +45,19 @@ class Fetch {
   /**
    * Extends {@link #curl_init()} to also set {@code CURLOPT_TIMEOUT}
    * and {@code CURLOPT_CONNECTTIMEOUT} appropriately.
+   * These are set based on Config::get('get_contents_timeout') and Config::get('get_contents_timeout')
    */
   static function initCurl() {
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_TIMEOUT, \Openclerk\Config::get('get_contents_timeout') /* in sec */);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, \Openclerk\Config::get('get_contents_timeout') /* in sec */);
+    curl_setopt($ch, CURLOPT_TIMEOUT, Config::get('get_contents_timeout') /* in sec */);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, Config::get('get_contents_timeout') /* in sec */);
     return $ch;
   }
 
   /**
    * @throws a {@link CloudFlareException} or {@link IncapsulaException} if the given
-   *    remote response suggests something about CloudFlare or Incapsula.
-   * @throws an {@link ExternalAPIException} if the response suggests something else that was unexpected
+   *    remote response suggests something about CloudFlare or Incapsula
+   * @throws an {@link FetchException} if the response suggests something else that was unexpected
    */
   static function checkResponse($string, $message = false) {
     if (strpos($string, 'DDoS protection by CloudFlare') !== false) {
@@ -67,19 +78,19 @@ class Fetch {
       throw new IncapsulaException('Throttled by Incapsula' . ($message ? " $message" : ""));
     }
     if (strpos(strtolower($string), '301 moved permanently') !== false) {
-      throw new ExternalAPIException("API location has been moved permanently" . ($message ? " $message" : ""));
+      throw new FetchException("API location has been moved permanently" . ($message ? " $message" : ""));
     }
     if (strpos($string, "Access denied for user '") !== false) {
-      throw new ExternalAPIException("Remote database host returned 'Access denied'" . ($message ? " $message" : ""));
+      throw new FetchException("Remote database host returned 'Access denied'" . ($message ? " $message" : ""));
     }
     if (strpos(strtolower($string), "502 bad gateway") !== false) {
-      throw new ExternalAPIException("Bad gateway" . ($message ? " $message" : ""));
+      throw new FetchException("Bad gateway" . ($message ? " $message" : ""));
     }
     if (strpos(strtolower($string), "503 service unavailable") !== false) {
-      throw new ExternalAPIException("Service unavailable" . ($message ? " $message" : ""));
+      throw new FetchException("Service unavailable" . ($message ? " $message" : ""));
     }
     if (strpos(strtolower($string), "connection timed out") !== false) {
-      throw new ExternalAPIException("Connection timed out" . ($message ? " $message" : ""));
+      throw new FetchException("Connection timed out" . ($message ? " $message" : ""));
     }
   }
 
@@ -87,7 +98,8 @@ class Fetch {
    * Try to decode a JSON string, or try and work out why it failed to decode but throw an exception
    * if it was not a valid JSON string.
    *
-   * @param empty_is_ok if true, then don't bail if the returned JSON is an empty array
+   * @param $empty_array_is_ok if true, then don't bail if the returned JSON is an empty array
+   * @throws a {@link FetchException} if the JSON is not valid and empty_array_is_ok is false
    */
   static function jsonDecode($string, $message = false, $empty_array_is_ok = false) {
     $json = json_decode($string, true);
@@ -98,25 +110,25 @@ class Fetch {
       }
       self::checkResponse($string);
       if (substr($string, 0, 1) == "<") {
-        throw new ExternalAPIException("Unexpectedly received HTML instead of JSON" . ($message ? " $message" : ""));
+        throw new FetchException("Unexpectedly received HTML instead of JSON" . ($message ? " $message" : ""));
       }
       if (strpos(strtolower($string), "invalid key") !== false) {
-        throw new ExternalAPIException("Invalid key" . ($message ? " $message" : ""));
+        throw new FetchException("Invalid key" . ($message ? " $message" : ""));
       }
       if (strpos(strtolower($string), "bad api key") !== false) {
-        throw new ExternalAPIException("Bad API key" . ($message ? " $message" : ""));
+        throw new FetchException("Bad API key" . ($message ? " $message" : ""));
       }
       if (strpos(strtolower($string), "access denied") !== false) {
-        throw new ExternalAPIException("Access denied" . ($message ? " $message" : ""));
+        throw new FetchException("Access denied" . ($message ? " $message" : ""));
       }
       if (strpos(strtolower($string), "parameter error") !== false) {
         // for 796 Exchange
-        throw new ExternalAPIException("Parameter error" . ($message ? " $message" : ""));
+        throw new FetchException("Parameter error" . ($message ? " $message" : ""));
       }
       if (!$string) {
         throw new EmptyResponseException('Response was empty' . ($message ? " $message" : ""));
       }
-      throw new ExternalAPIException('Invalid data received' . ($message ? " $message" : ""));
+      throw new FetchException('Invalid data received' . ($message ? " $message" : ""));
     }
     return $json;
   }

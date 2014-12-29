@@ -6,6 +6,9 @@
       "Apis\\": "src"
     }
   },
+  "require": {
+    "openclerk/config": "dev-master"
+  },
   "require-dev": {
     "soundasleep/component-tests": "dev-master"
   }
