@@ -1,8 +1,12 @@
 {
   "name": "openclerk/apis",
+  "description": "A library for defining and using APIs",
   "autoload": {
     "psr-4": {
       "Apis\\": "src"
     }
+  },
+  "require-dev": {
+    "soundasleep/component-tests": "dev-master"
   }
 }
