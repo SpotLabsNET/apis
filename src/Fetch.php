@@ -133,4 +133,30 @@ class Fetch {
     return $json;
   }
 
+  /**
+   * Checks the JSON to make sure it adheres to the JSend format http://labs.omniti.com/labs/jsend.
+   * Throws an JSendException if the JSON returned a 'fail', otherwise returns the wrapped data.
+   *
+   * @return $json['data'] if there were no problems
+   * @throws JSendException if there was a failure in the response
+   */
+  static function checkJSend($json) {
+    if (isset($json['status'])) {
+      if ($json['status'] == 'fail') {
+        if (isset($json['message']) && $json['message']) {
+          throw new JSendException("API failed: " . $json['message']);
+        }
+        if (isset($json['data'])) {
+          throw new JSendException("API failed: " . implode(", ", $json['data']));
+        }
+        throw new JSendException("API failed with no message");
+      }
+    }
+    if (isset($json['data'])) {
+      return $json['data'];
+    }
+    throw new JSendException("Empty JSend response");
+  }
+
+
 }
