@@ -43,6 +43,41 @@ class Fetch {
   }
 
   /**
+   * Uses {@code curl} to POST data to a URL.
+   * Optionally uses the user agent defined in Config::get('fetch_user_agent').
+   *
+   * TODO currently sets CURLOPT_SSL_VERIFYPEER to FALSE globally; this should be an option
+   *
+   * @param $options additional CURL options to pass
+   * @throws a {@link FetchException} if something unexpected occured
+   */
+  static function post($url, $post_data, $options = array()) {
+    // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
+    // this also means we don't have to enable OpenSSL on windows for file_get_contents('https://...'), which is just a bit of a mess
+    $ch = self::initCurl();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; ' . Config::get('fetch_user_agent', 'openclerk/api PHP fetch') . ' '.php_uname('s').'; PHP/'.phpversion().')');
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+    // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
+
+    // TODO should this actually be set to true? or a fetch option?
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+    foreach ($options as $key => $value) {
+      curl_setopt($ch, $key, $value);
+    }
+
+    // run the query
+    $res = curl_exec($ch);
+
+    if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
+    self::checkResponse($res);
+
+    return $res;
+  }
+
+  /**
    * Extends {@link #curl_init()} to also set {@code CURLOPT_TIMEOUT}
    * and {@code CURLOPT_CONNECTTIMEOUT} appropriately.
    * These are set based on Config::get('get_contents_timeout') and Config::get('get_contents_timeout')
