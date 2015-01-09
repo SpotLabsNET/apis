@@ -156,6 +156,9 @@ class Fetch {
       if (strpos(strtolower($string), "access denied") !== false) {
         throw new FetchException("Access denied" . ($message ? " $message" : ""));
       }
+      if (strpos(strtolower($string), "invalid token") !== false) {
+        throw new FetchException("Invalid token" . ($message ? " $message" : ""));
+      }
       if (strpos(strtolower($string), "parameter error") !== false) {
         // for 796 Exchange
         throw new FetchException("Parameter error" . ($message ? " $message" : ""));
