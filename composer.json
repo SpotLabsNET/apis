@@ -11,5 +11,8 @@
   },
   "require-dev": {
     "soundasleep/component-tests": "dev-master"
+  },
+  "suggest": {
+    "openclerk/cache": "For cacheable APIs"
   }
 }

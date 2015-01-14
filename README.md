@@ -72,11 +72,31 @@ foreach (DiscoveredComponents\Apis::getAllInstances() as $uri => $handler) {
 }
 ```
 
+## Caching
+
+Using [openclerk/cache](https://github.com/openclerk/cache) you can also cache API calls:
+
+```php
+/**
+ * API to get a single currency properties.
+ */
+class Currency extends \Apis\CachedApi {
+
+  // ...
+
+  function getHash($arguments) {
+    return substr($arguments['currency'], 0, 32);
+  }
+
+  function getAge() {
+    return 60; /* cache age in seconds */
+  }
+}
+```
+
 ## TODO
 
-1. Documentation on Fetch
-1. API caching support
-1. At `component-discovery` time check that all `getEndpoints()` match, _or_ define extensions so that additional properties can be serialized at compile time (e.g. `code`, `endpoint` -> `getInstanceForEndpoint($endpoint)` and `getAllEndpoints()`...)
+1. Documentation on Apis\Fetch methods
 1. A way to define APIs lazily without instantiating all Apis at every request time
 1. Tests
 1. Publish on Packagist
