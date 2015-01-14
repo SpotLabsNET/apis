@@ -2,18 +2,24 @@
 
 namespace Apis;
 
-abstract class Api {
+/**
+ * Implements naive API caching using `openclerk/cache`.
+ */
+abstract class CachedApi extends Api {
 
   /**
-   * Compile the JSON with the given arguments, as parsed
-   * from the {@link #getEndpoint()} string.
+   * Return a 32-character hash from the given argmuents so that it
+   * can be cached.
    */
-  abstract function getJSON($arguments);
+  abstract function getHash($arguments);
 
   /**
-   * @return e.g. "/api/v1/currency/:currency"
+   * How long are API calls cached?
+   * @return number of seconds, default 60
    */
-  abstract function getEndpoint();
+  function getAge() {
+    return 60;
+  }
 
   /**
    * Try and get the JSON result for this API, and return either
@@ -37,21 +43,36 @@ abstract class Api {
    */
   function render($arguments) {
     header("Content-Type: application/json");
+    echo $this->renderJSON($arguments);
+  }
 
+  function renderJSON($arguments) {
     try {
-      $json = array('success' => true, 'result' => $this->getJSON($arguments));
-      echo json_encode($json);
+
+      return \Openclerk\Cache::get(db(),
+        $this->getEndpoint() /* key */,
+        $this->getHash($arguments) /* hash */,
+        $this->getAge() /* seconds */,
+        array($this, 'getCached'),
+        array($arguments));
 
     } catch (\Exception $e) {
       // render an API exception
+      // we wrap exceptions here, not in getCached(), because we don't want to be
+      // caching exceptions or errors
       // TODO use an error HTTP code
-      $json = array('success' => false, 'error' => $e->getMessage());
-      echo json_encode($json);
+      $json = array('success' => false, 'error' => $e->getMessage(), 'time' => date('c'));
+      return json_encode($json);
 
       if (function_exists('log_uncaught_exception')) {
         log_uncaught_exception(new CaughtApiException("API threw '" . $e->getMessage() . "'", $e));
       }
     }
+  }
+
+  function getCached($arguments) {
+    $json = array('success' => true, 'result' => $this->getJSON($arguments), 'time' => date('c'));
+    return json_encode($json);
   }
 
 }
