@@ -4,8 +4,16 @@ namespace Apis\Tests;
 
 use Apis\Fetch;
 use Apis\JSendException;
+use Apis\FetchException;
+use Openclerk\Config;
 
 class FetchTest extends \PHPUnit_Framework_TestCase {
+
+  function __construct() {
+    Config::merge(array(
+      "get_contents_timeout" => 10,
+    ));
+  }
 
   function testJSend() {
     $json = array("status" => "success", "data" => array("a" => "b"));
@@ -19,6 +27,15 @@ class FetchTest extends \PHPUnit_Framework_TestCase {
       $this->fail("Expected failure");
     } catch (JSendException $e) {
       // expected
+    }
+  }
+
+  function test404() {
+    try {
+      Fetch::get("http://cryptfolio.com/404");
+      $this->fail("Expected 404 to be thrown");
+    } catch (FetchException $e) {
+      $this->assertEquals("Remote server returned HTTP 404", $e->getMessage());
     }
   }
 

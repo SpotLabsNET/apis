@@ -36,6 +36,12 @@ class Fetch {
     // run the query
     $res = curl_exec($ch);
 
+    // check HTTP error code
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($code >= 400) {
+      throw new FetchException("Remote server returned HTTP $code");
+    }
+
     if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
     self::checkResponse($res);
 
@@ -70,6 +76,12 @@ class Fetch {
 
     // run the query
     $res = curl_exec($ch);
+
+    // check HTTP error code
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($code >= 400) {
+      throw new FetchException("Remote server returned HTTP $code");
+    }
 
     if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
     self::checkResponse($res);
