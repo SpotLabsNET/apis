@@ -15,6 +15,7 @@ class Fetch {
    *
    * @param $options additional CURL options to pass
    * @throws a {@link FetchException} if something unexpected occured
+   * @throws a {@link FetchHttpException} if the remote server returned HTTP 400 or higher
    */
   static function get($url, $options = array()) {
     // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
@@ -39,7 +40,7 @@ class Fetch {
     // check HTTP error code
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($code >= 400) {
-      throw new FetchException("Remote server returned HTTP $code");
+      throw new FetchHttpException("Remote server returned HTTP $code", $res);
     }
 
     if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
@@ -56,6 +57,7 @@ class Fetch {
    *
    * @param $options additional CURL options to pass
    * @throws a {@link FetchException} if something unexpected occured
+   * @throws a {@link FetchHttpException} if the remote server returned HTTP 400 or higher
    */
   static function post($url, $post_data, $options = array()) {
     // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
@@ -80,7 +82,7 @@ class Fetch {
     // check HTTP error code
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($code >= 400) {
-      throw new FetchException("Remote server returned HTTP $code");
+      throw new FetchHttpException("Remote server returned HTTP $code", $res);
     }
 
     if ($res === false) throw new FetchException('Could not get reply: ' . curl_error($ch));
