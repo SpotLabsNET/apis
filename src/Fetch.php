@@ -26,6 +26,7 @@ class Fetch {
     curl_setopt($ch, CURLOPT_URL, $url);
     // curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
     // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Accept-Encoding: deflate"));      // issue #430
     curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
 
     // TODO should this actually be set to true? or a fetch option?
@@ -68,6 +69,7 @@ class Fetch {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
     // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Accept-Encoding: deflate"));      // issue #430
     curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
 
     // TODO should this actually be set to true? or a fetch option?
