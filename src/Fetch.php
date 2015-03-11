@@ -182,6 +182,10 @@ class Fetch {
       if (!$string) {
         throw new EmptyResponseException('Response was empty' . ($message ? " $message" : ""));
       }
+      if (!preg_match("/[^<>\r\n]/i", $string) && strlen($string) < 128) {
+        // this is probably an error message that we can return
+        throw new FetchException($string . ($message ? " $message" : ""));
+      }
       throw new FetchException('Invalid data received' . ($message ? " $message" : ""));
     }
     return $json;
