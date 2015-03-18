@@ -1,7 +1,7 @@
-openclerk/apis
+openclerk/apis [![Build Status](https://travis-ci.org/openclerk/apis.svg)](https://travis-ci.org/openclerk/apis)
 ==============
 
-A library for defining APIs in Openclerk.
+A library for defining APIs in Openclerk, live on [CryptFolio](https://cryptfolio.com/api).
 
 ## Installing
 
@@ -12,11 +12,7 @@ and run `composer update` to install it into your project:
 {
   "require": {
     "openclerk/apis": "dev-master"
-  },
-  "repositories": [{
-    "type": "vcs",
-    "url": "https://github.com/openclerk/apis"
-  }]
+  }
 }
 ```
 
@@ -99,4 +95,3 @@ class Currency extends \Apis\CachedApi {
 1. Documentation on Apis\Fetch methods
 1. A way to define APIs lazily without instantiating all Apis at every request time
 1. Tests
-1. Publish on Packagist
