@@ -57,10 +57,11 @@ class Fetch {
    * TODO currently sets CURLOPT_SSL_VERIFYPEER to FALSE globally; this should be an option
    *
    * @param $options additional CURL options to pass
+   * @param $headers additional headers to pass
    * @throws a {@link FetchException} if something unexpected occured
    * @throws a {@link FetchHttpException} if the remote server returned HTTP 400 or higher
    */
-  static function post($url, $post_data, $options = array()) {
+  static function post($url, $post_data, $options = array(), $headers = array()) {
     // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
     // this also means we don't have to enable OpenSSL on windows for file_get_contents('https://...'), which is just a bit of a mess
     $ch = self::initCurl();
@@ -68,8 +69,8 @@ class Fetch {
     curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; ' . Config::get('fetch_user_agent', 'openclerk/api PHP fetch') . ' '.php_uname('s').'; PHP/'.phpversion().')');
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-    // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Accept-Encoding: deflate"));      // issue #430
+    $headers[] = "Accept-Encoding: deflate";      // issue #430
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
 
     // TODO should this actually be set to true? or a fetch option?
@@ -102,6 +103,10 @@ class Fetch {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_TIMEOUT, Config::get('get_contents_timeout') /* in sec */);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, Config::get('get_contents_timeout') /* in sec */);
+
+    // extend the script time limit
+    set_time_limit(Config::get('get_contents_timeout') /* in sec */ * 1.2);
+
     return $ch;
   }
 
