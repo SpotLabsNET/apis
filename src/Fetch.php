@@ -36,6 +36,7 @@ class Fetch {
     }
 
     // run the query
+    set_time_limit(ini_get('max_execution_time'));      // reset time limit
     $res = curl_exec($ch);
 
     // check HTTP error code
@@ -80,6 +81,7 @@ class Fetch {
     }
 
     // run the query
+    set_time_limit(ini_get('max_execution_time'));      // reset time limit
     $res = curl_exec($ch);
 
     // check HTTP error code
@@ -103,9 +105,6 @@ class Fetch {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_TIMEOUT, Config::get('get_contents_timeout') /* in sec */);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, Config::get('get_contents_timeout') /* in sec */);
-
-    // extend the script time limit
-    set_time_limit(Config::get('get_contents_timeout') /* in sec */ * 1.2);
 
     return $ch;
   }
