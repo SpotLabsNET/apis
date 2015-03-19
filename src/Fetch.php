@@ -110,9 +110,9 @@ class Fetch {
    *    remote response suggests something about CloudFlare or Incapsula
    * @throws an {@link FetchException} if the response suggests something else that was unexpected
    */
-  static function checkResponse($string, $message = false) {
+  static function checkResponse($string) {
     if (strpos($string, 'DDoS protection by CloudFlare') !== false) {
-      throw new CloudFlareException('Throttled by CloudFlare' . ($message ? " $message" : ""));
+      throw new CloudFlareException('Throttled by CloudFlare');
     }
     if (strpos($string, 'CloudFlare') !== false) {
       if (strpos($string, 'The origin web server timed out responding to this request.') !== false) {
@@ -123,25 +123,25 @@ class Fetch {
       }
     }
     if (strpos($string, 'Incapsula incident') !== false) {
-      throw new IncapsulaException('Blocked by Incapsula' . ($message ? " $message" : ""));
+      throw new IncapsulaException('Blocked by Incapsula');
     }
     if (strpos($string, '_Incapsula_Resource') !== false) {
-      throw new IncapsulaException('Throttled by Incapsula' . ($message ? " $message" : ""));
+      throw new IncapsulaException('Throttled by Incapsula');
     }
     if (strpos(strtolower($string), '301 moved permanently') !== false) {
-      throw new FetchException("API location has been moved permanently" . ($message ? " $message" : ""));
+      throw new FetchException("API location has been moved permanently");
     }
     if (strpos($string, "Access denied for user '") !== false) {
-      throw new FetchException("Remote database host returned 'Access denied'" . ($message ? " $message" : ""));
+      throw new FetchException("Remote database host returned 'Access denied'");
     }
     if (strpos(strtolower($string), "502 bad gateway") !== false) {
-      throw new FetchException("Bad gateway" . ($message ? " $message" : ""));
+      throw new FetchException("Bad gateway");
     }
     if (strpos(strtolower($string), "503 service unavailable") !== false) {
-      throw new FetchException("Service unavailable" . ($message ? " $message" : ""));
+      throw new FetchException("Service unavailable");
     }
     if (strpos(strtolower($string), "connection timed out") !== false) {
-      throw new FetchException("Connection timed out" . ($message ? " $message" : ""));
+      throw new FetchException("Connection timed out");
     }
   }
 
@@ -149,44 +149,39 @@ class Fetch {
    * Try to decode a JSON string, or try and work out why it failed to decode but throw an exception
    * if it was not a valid JSON string.
    *
-   * @param $empty_array_is_ok if true, then don't bail if the returned JSON is an empty array
-   * @throws a {@link FetchException} if the JSON is not valid and empty_array_is_ok is false
+   * @throws a {@link FetchException} if the JSON is not valid
    */
-  static function jsonDecode($string, $message = false, $empty_array_is_ok = false) {
+  static function jsonDecode($string) {
     $json = json_decode($string, true);
     if (!$json) {
-      if ($empty_array_is_ok && is_array($json)) {
-        // the result is an empty array
-        return $json;
-      }
       self::checkResponse($string);
       if (substr($string, 0, 1) == "<") {
-        throw new FetchException("Unexpectedly received HTML instead of JSON" . ($message ? " $message" : ""));
+        throw new FetchException("Unexpectedly received HTML instead of JSON");
       }
       if (strpos(strtolower($string), "invalid key") !== false) {
-        throw new FetchException("Invalid key" . ($message ? " $message" : ""));
+        throw new FetchException("Invalid key");
       }
       if (strpos(strtolower($string), "bad api key") !== false) {
-        throw new FetchException("Bad API key" . ($message ? " $message" : ""));
+        throw new FetchException("Bad API key");
       }
       if (strpos(strtolower($string), "access denied") !== false) {
-        throw new FetchException("Access denied" . ($message ? " $message" : ""));
+        throw new FetchException("Access denied");
       }
       if (strpos(strtolower($string), "invalid token") !== false) {
-        throw new FetchException("Invalid token" . ($message ? " $message" : ""));
+        throw new FetchException("Invalid token");
       }
       if (strpos(strtolower($string), "parameter error") !== false) {
         // for 796 Exchange
-        throw new FetchException("Parameter error" . ($message ? " $message" : ""));
+        throw new FetchException("Parameter error");
       }
       if (!$string) {
-        throw new EmptyResponseException('Response was empty' . ($message ? " $message" : ""));
+        throw new EmptyResponseException('Response was empty');
       }
       if (!preg_match("/[^<>\r\n]/i", $string) && strlen($string) < 128) {
         // this is probably an error message that we can return
-        throw new FetchException($string . ($message ? " $message" : ""));
+        throw new FetchException($string);
       }
-      throw new FetchException('Invalid data received' . ($message ? " $message" : ""));
+      throw new FetchException('Invalid data received');
     }
     return $json;
   }
