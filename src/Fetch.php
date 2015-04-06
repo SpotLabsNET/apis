@@ -17,16 +17,15 @@ class Fetch {
    * @throws a {@link FetchException} if something unexpected occured
    * @throws a {@link FetchHttpException} if the remote server returned HTTP 400 or higher
    */
-  static function get($url, $options = array()) {
+  static function get($url, $options = array(), $headers = array()) {
     // normally file_get_contents is OK, but if URLs are down etc, the timeout has no value and we can just stall here forever
     // this also means we don't have to enable OpenSSL on windows for file_get_contents('https://...'), which is just a bit of a mess
     $ch = self::initCurl();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; ' . Config::get('fetch_user_agent', 'openclerk/api PHP fetch') . ' '.php_uname('s').'; PHP/'.phpversion().')');
     curl_setopt($ch, CURLOPT_URL, $url);
-    // curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-    // curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Accept-Encoding: deflate"));      // issue #430
+    $headers[] = "Accept-Encoding: deflate";      // issue #430
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_ENCODING, "gzip,deflate");     // enable gzip decompression if necessary
 
     // TODO should this actually be set to true? or a fetch option?
