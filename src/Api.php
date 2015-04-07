@@ -37,6 +37,7 @@ abstract class Api {
    */
   function render($arguments) {
     header("Content-Type: application/json");
+    header("Access-Control-Allow-Origin: *");
 
     try {
       $json = array('success' => true, 'result' => $this->getJSON($arguments));
